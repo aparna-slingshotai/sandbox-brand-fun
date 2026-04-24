@@ -2,11 +2,13 @@
 // and provides a mouse/touch fallback for the draw force.
 
 export class UIState {
-  constructor(sand) {
+  constructor(sand, mic) {
     this.sand = sand;
+    this.mic = mic;
 
     // Toggle / one-shot state read by the render loop.
     this.windOn = false;
+    this.micOn = false;
     this.gravityOn = false;
     this.clearAnim = null; // { startTime: number } when running
 
@@ -20,6 +22,7 @@ export class UIState {
   _wireButtons() {
     const $ = (id) => document.getElementById(id);
     this.btnWind = $("btn-wind");
+    this.btnMic = $("btn-mic");
     this.btnGravity = $("btn-gravity");
     this.btnClear = $("btn-clear");
     this.btnReset = $("btn-reset");
@@ -27,6 +30,27 @@ export class UIState {
     this.btnWind.addEventListener("click", () => {
       this.windOn = !this.windOn;
       this.btnWind.classList.toggle("active", this.windOn);
+    });
+
+    this.btnMic.addEventListener("click", async () => {
+      if (this.micOn) {
+        // Toggle off — disable sampling but keep permission.
+        this.mic.disable();
+        this.micOn = false;
+        this.btnMic.classList.remove("active");
+        return;
+      }
+      try {
+        this.btnMic.classList.add("loading");
+        await this.mic.enable();
+        this.micOn = true;
+        this.btnMic.classList.add("active");
+      } catch (err) {
+        console.warn("Mic permission denied or unavailable.", err);
+        this.showHint("Mic access denied — check browser permissions");
+      } finally {
+        this.btnMic.classList.remove("loading");
+      }
     });
 
     this.btnGravity.addEventListener("click", () => {
@@ -49,6 +73,15 @@ export class UIState {
       this.btnGravity.classList.remove("active");
       this.sand.reset();
     });
+  }
+
+  showHint(text, ms = 2600) {
+    const hint = document.getElementById("hint");
+    if (!hint) return;
+    hint.textContent = text;
+    hint.classList.remove("fade");
+    clearTimeout(this._hintTimer);
+    this._hintTimer = setTimeout(() => hint.classList.add("fade"), ms);
   }
 
   _wireMouse() {

@@ -35,6 +35,34 @@ export function applyDraw(sand, fx, fy) {
   }
 }
 
+// Radial wind: pushes every particle outward from a center point (cx, cy).
+// Used by the mic-blow detector so that blowing scatters sand away from the
+// camera like you're actually blowing on it. `strength` is a single multiplier
+// (intensity × CFG.MIC_WIND_STRENGTH) that the caller has already computed.
+export function applyRadialBlow(sand, cx, cy, strength) {
+  const { N, px, py, vx, vy, state, pileHeight, w } = sand;
+  const maxR = Math.max(w, sand.h);
+  const falloffInv = 1 / maxR;
+
+  for (let i = 0; i < N; i++) {
+    const dx = px[i] - cx;
+    const dy = py[i] - cy;
+    const d2 = dx * dx + dy * dy;
+    const d = Math.sqrt(d2) || 0.0001;
+    // Falloff: particles near the blow center get hit harder.
+    const falloff = 1 - Math.min(1, d * falloffInv);
+    const push = strength * (0.4 + falloff * 0.9);
+    vx[i] += (dx / d) * push + (Math.random() - 0.5) * 0.25;
+    vy[i] += (dy / d) * push + (Math.random() - 0.5) * 0.25;
+
+    if (state[i] === 1) {
+      const x = px[i] | 0;
+      if (x >= 0 && x < w && pileHeight[x] > 0) pileHeight[x]--;
+      state[i] = 0;
+    }
+  }
+}
+
 // Wind: uniform force on every particle in direction `wx/wy`.
 export function applyWind(sand, wx, wy) {
   const { N, vx, vy, state, px, pileHeight, w } = sand;

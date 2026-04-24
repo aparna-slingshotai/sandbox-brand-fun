@@ -7,11 +7,13 @@ import { startCamera } from "./camera.js";
 import { Sand } from "./sand.js";
 import { UIState } from "./ui.js";
 import { HandTracker } from "./hand-tracking.js";
+import { MicBlow } from "./mic.js";
 import { CFG } from "./config.js";
 import { initPanel } from "./panel.js";
 import {
   applyDraw,
   applyWind,
+  applyRadialBlow,
   applyGravity,
   stepClearAnim,
 } from "./forces.js";
@@ -24,7 +26,8 @@ const permissionMsg = document.getElementById("permission-msg");
 const hint = document.getElementById("hint");
 
 const sand = new Sand(canvas);
-const ui = new UIState(sand);
+const mic = new MicBlow();
+const ui = new UIState(sand, mic);
 initPanel(sand);
 
 window.addEventListener("resize", () => {
@@ -99,6 +102,16 @@ function frame(now) {
     const wx = -hand.dirX * CFG.WIND_STRENGTH;
     const wy = -hand.dirY * CFG.WIND_STRENGTH;
     applyWind(sand, wx, wy);
+  }
+
+  // Mic blow: sample amplitude and, above threshold, blow sand radially from
+  // screen center as if the user is actually blowing at the camera.
+  if (ui.micOn) {
+    const intensity = mic.sample();
+    if (intensity > 0) {
+      const strength = intensity * CFG.MIC_WIND_STRENGTH;
+      applyRadialBlow(sand, sand.w / 2, sand.h / 2, strength);
+    }
   }
 
   // Clear: one-shot animated shockwave.

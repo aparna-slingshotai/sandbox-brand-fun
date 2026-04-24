@@ -54,8 +54,15 @@ export class Sand {
     this.canvas.style.height = window.innerHeight + "px";
     this.dpr = dpr;
 
+    // Size the population to one particle per (PARTICLE_SIZE × PARTICLE_SIZE)
+    // cell so initial coverage is 100%. Fall back to the density cap on small
+    // canvases and PARTICLE_MAX on huge ones.
+    const size = CFG.PARTICLE_SIZE;
+    this.gridCols = Math.ceil(w / size);
+    this.gridRows = Math.ceil(h / size);
+    const gridN = this.gridCols * this.gridRows;
     const capByArea = Math.floor(w * h * CFG.PARTICLE_DENSITY);
-    this.N = Math.min(CFG.PARTICLE_MAX, capByArea);
+    this.N = Math.min(CFG.PARTICLE_MAX, Math.max(gridN, capByArea));
 
     this.px = new Float32Array(this.N);
     this.py = new Float32Array(this.N);
@@ -75,9 +82,26 @@ export class Sand {
   reset() {
     const [gMin, gMax] = CFG.GRAVITY_VARIANCE;
     const palN = CFG.PALETTE.length;
+    const size = CFG.PARTICLE_SIZE;
+    const gridCols = this.gridCols;
+    const gridRows = this.gridRows;
+    const gridN = gridCols * gridRows;
+    // Jitter is kept small so particle blocks stay aligned and the mask
+    // reads as fully opaque — visible gaps mean visible camera bleed.
+    const jitter = 0.35;
+
     for (let i = 0; i < this.N; i++) {
-      this.px[i] = Math.random() * this.w;
-      this.py[i] = Math.random() * this.h;
+      // First `gridN` particles go onto a jittered cell grid so the whole
+      // canvas is blanket-covered. Any surplus particles get random positions.
+      if (i < gridN) {
+        const gx = i % gridCols;
+        const gy = (i / gridCols) | 0;
+        this.px[i] = gx * size + size / 2 + (Math.random() - 0.5) * jitter;
+        this.py[i] = gy * size + size / 2 + (Math.random() - 0.5) * jitter;
+      } else {
+        this.px[i] = Math.random() * this.w;
+        this.py[i] = Math.random() * this.h;
+      }
       this.vx[i] = 0;
       this.vy[i] = 0;
       this.col[i] = Math.floor(Math.random() * palN);
@@ -152,37 +176,37 @@ export class Sand {
     const pal = CFG.PALETTE;
     const size = CFG.PARTICLE_SIZE;
 
+    const rowStride = w * 4;
+
     for (let i = 0; i < N; i++) {
       const x = px[i] | 0;
       const y = py[i] | 0;
-      if (x < 0 || x >= w - 1 || y < 0 || y >= h - 1) continue;
+      if (x < 0 || x >= w - (size - 1) || y < 0 || y >= h - (size - 1)) continue;
 
       const c = pal[col[i]];
       const r = c[0], g = c[1], b = c[2], a = c[3];
       const base = (y * w + x) * 4;
-      data[base] = r;
-      data[base + 1] = g;
-      data[base + 2] = b;
-      data[base + 3] = a;
 
-      if (size >= 2) {
-        const right = base + 4;
-        data[right] = r;
-        data[right + 1] = g;
-        data[right + 2] = b;
-        data[right + 3] = a;
-
-        const down = base + w * 4;
-        data[down] = r;
-        data[down + 1] = g;
-        data[down + 2] = b;
-        data[down + 3] = a;
-
-        const diag = down + 4;
-        data[diag] = r;
-        data[diag + 1] = g;
-        data[diag + 2] = b;
-        data[diag + 3] = a;
+      if (size === 1) {
+        data[base] = r;
+        data[base + 1] = g;
+        data[base + 2] = b;
+        data[base + 3] = a;
+      } else if (size === 2) {
+        const row1 = base + rowStride;
+        data[base] = r;      data[base + 1] = g;      data[base + 2] = b;      data[base + 3] = a;
+        data[base + 4] = r;  data[base + 5] = g;      data[base + 6] = b;      data[base + 7] = a;
+        data[row1] = r;      data[row1 + 1] = g;      data[row1 + 2] = b;      data[row1 + 3] = a;
+        data[row1 + 4] = r;  data[row1 + 5] = g;      data[row1 + 6] = b;      data[row1 + 7] = a;
+      } else {
+        // 3×3 block — unrolled
+        const row1 = base + rowStride;
+        const row2 = base + rowStride * 2;
+        for (let off = 0; off <= 8; off += 4) {
+          data[base + off] = r;     data[base + off + 1] = g;     data[base + off + 2] = b;     data[base + off + 3] = a;
+          data[row1 + off] = r;     data[row1 + off + 1] = g;     data[row1 + off + 2] = b;     data[row1 + off + 3] = a;
+          data[row2 + off] = r;     data[row2 + off + 1] = g;     data[row2 + off + 2] = b;     data[row2 + off + 3] = a;
+        }
       }
     }
 
@@ -195,12 +219,11 @@ export class Sand {
     const { r, g, b } = hexToRgb(hex);
     // Build a 6-entry palette: shades from darker (60%) to lighter (130%).
     const shades = [0.62, 0.78, 0.9, 1.02, 1.15, 1.3];
-    const alphas = [232, 232, 232, 224, 232, 240];
-    const pal = shades.map((s, i) => [
+    const pal = shades.map((s) => [
       Math.max(0, Math.min(255, Math.round(r * s))),
       Math.max(0, Math.min(255, Math.round(g * s))),
       Math.max(0, Math.min(255, Math.round(b * s))),
-      alphas[i],
+      255,
     ]);
     CFG.PALETTE = pal;
   }

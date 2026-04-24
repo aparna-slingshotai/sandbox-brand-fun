@@ -1,12 +1,12 @@
 // All tunables for the sand system in one place. Tweak freely.
 
 export const CFG = {
-  // Particle population. At 2x2 blocks, each particle covers 4 pixels, so
-  // density 0.09 → ~36% coverage — dense enough to read as a sand mask while
-  // still letting the camera peek through the grain.
-  PARTICLE_DENSITY: 0.09,
-  PARTICLE_MAX: 130000,
-  PARTICLE_SIZE: 2, // 1 or 2 (2 writes a 2x2 block per particle)
+  // Particle population. Particles are placed on a jittered grid sized to
+  // PARTICLE_SIZE so initial coverage is 100% — the sand reads as a true
+  // opaque mask until disturbed. Density is only used as a fallback cap.
+  PARTICLE_DENSITY: 0.14,
+  PARTICLE_MAX: 260000,
+  PARTICLE_SIZE: 3, // 1, 2, or 3 — also controls the grid cell at reset()
 
   // Motion
   DAMPING: 0.985, // velocity decay per frame
@@ -39,13 +39,21 @@ export const CFG = {
   POINTING_CURL_RATIO: 1.05, // other fingers must be below this
   POINTING_DEBOUNCE_FRAMES: 4,
 
-  // Sand palette (beige / tan / ochre)
+  // Sand palette (beige / tan / ochre). Alpha is 255 so the sand reads as a
+  // true mask that hides the camera completely wherever particles sit.
   PALETTE: [
-    [237, 201, 143, 232],
-    [218, 178, 116, 232],
-    [196, 154, 95, 232],
-    [244, 222, 179, 224],
-    [205, 170, 125, 232],
-    [172, 132, 82, 240],
+    [237, 201, 143, 255],
+    [218, 178, 116, 255],
+    [196, 154, 95, 255],
+    [244, 222, 179, 255],
+    [205, 170, 125, 255],
+    [172, 132, 82, 255],
   ],
+
+  // Mic blow detection
+  MIC_BLOW_THRESHOLD: 0.16, // normalized amplitude above which a blow fires
+  MIC_WIND_STRENGTH: 0.75, // multiplied by amplitude → radial outward push
+  MIC_FFT_SIZE: 512,
+  MIC_BAND_LOW: 2, // FFT bin (~86Hz) — skip DC / rumble
+  MIC_BAND_HIGH: 24, // ~2000Hz — focus on breath frequencies
 };
