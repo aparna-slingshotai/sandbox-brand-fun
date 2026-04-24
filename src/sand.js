@@ -199,14 +199,32 @@ export class Sand {
         data[row1] = r;      data[row1 + 1] = g;      data[row1 + 2] = b;      data[row1 + 3] = a;
         data[row1 + 4] = r;  data[row1 + 5] = g;      data[row1 + 6] = b;      data[row1 + 7] = a;
       } else {
-        // 3×3 block — unrolled
+        // 3×3 block with spherical shading — corners are darker, center is
+        // brighter. Reads as a rounded grain without losing any opacity.
         const row1 = base + rowStride;
         const row2 = base + rowStride * 2;
-        for (let off = 0; off <= 8; off += 4) {
-          data[base + off] = r;     data[base + off + 1] = g;     data[base + off + 2] = b;     data[base + off + 3] = a;
-          data[row1 + off] = r;     data[row1 + off + 1] = g;     data[row1 + off + 2] = b;     data[row1 + off + 3] = a;
-          data[row2 + off] = r;     data[row2 + off + 1] = g;     data[row2 + off + 2] = b;     data[row2 + off + 3] = a;
-        }
+
+        const rd = (r * 0.68) | 0;
+        const gd = (g * 0.68) | 0;
+        const bd = (b * 0.68) | 0;
+        const rl = r + ((255 - r) * 0.35) | 0;
+        const gl = g + ((255 - g) * 0.35) | 0;
+        const bl = b + ((255 - b) * 0.35) | 0;
+
+        // Row 0 — dark · edge · dark
+        data[base] = rd;       data[base + 1] = gd;       data[base + 2] = bd;       data[base + 3] = a;
+        data[base + 4] = r;    data[base + 5] = g;        data[base + 6] = b;        data[base + 7] = a;
+        data[base + 8] = rd;   data[base + 9] = gd;       data[base + 10] = bd;      data[base + 11] = a;
+
+        // Row 1 — edge · center · edge
+        data[row1] = r;        data[row1 + 1] = g;        data[row1 + 2] = b;        data[row1 + 3] = a;
+        data[row1 + 4] = rl;   data[row1 + 5] = gl;       data[row1 + 6] = bl;       data[row1 + 7] = a;
+        data[row1 + 8] = r;    data[row1 + 9] = g;        data[row1 + 10] = b;       data[row1 + 11] = a;
+
+        // Row 2 — dark · edge · dark
+        data[row2] = rd;       data[row2 + 1] = gd;       data[row2 + 2] = bd;       data[row2 + 3] = a;
+        data[row2 + 4] = r;    data[row2 + 5] = g;        data[row2 + 6] = b;        data[row2 + 7] = a;
+        data[row2 + 8] = rd;   data[row2 + 9] = gd;       data[row2 + 10] = bd;      data[row2 + 11] = a;
       }
     }
 

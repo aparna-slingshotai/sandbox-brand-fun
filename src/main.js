@@ -91,9 +91,9 @@ function frame(now) {
   // Draw: hand wins over mouse when both are present.
   const hand = handTracker?.state;
   if (hand && hand.present) {
-    applyDraw(sand, hand.tipX, hand.tipY);
+    applyDraw(sand, hand.tipX, hand.tipY, ui.gravityOn);
   } else if (ui.mouse.active) {
-    applyDraw(sand, ui.mouse.x, ui.mouse.y);
+    applyDraw(sand, ui.mouse.x, ui.mouse.y, ui.gravityOn);
   }
 
   // Wind: only when mode is on AND hand is pointing.

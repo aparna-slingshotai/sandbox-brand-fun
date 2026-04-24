@@ -39,15 +39,17 @@ export const CFG = {
   POINTING_CURL_RATIO: 1.05, // other fingers must be below this
   POINTING_DEBOUNCE_FRAMES: 4,
 
-  // Sand palette (beige / tan / ochre). Alpha is 255 so the sand reads as a
-  // true mask that hides the camera completely wherever particles sit.
+  // Sand palette — shaded around the dark-purple default (76, 58, 89). Alpha
+  // is 255 so the sand reads as a true mask that hides the camera completely
+  // wherever particles sit. The panel's color picker regenerates this palette
+  // on the fly when the user changes the tint.
   PALETTE: [
-    [237, 201, 143, 255],
-    [218, 178, 116, 255],
-    [196, 154, 95, 255],
-    [244, 222, 179, 255],
-    [205, 170, 125, 255],
-    [172, 132, 82, 255],
+    [47, 36, 55, 255],
+    [60, 46, 70, 255],
+    [68, 52, 80, 255],
+    [76, 58, 89, 255],
+    [88, 67, 103, 255],
+    [102, 78, 119, 255],
   ],
 
   // Mic blow detection

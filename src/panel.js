@@ -6,7 +6,7 @@
 
 import { CFG } from "./config.js";
 
-const PRESET_HEX = "#ecbd86"; // warm sand default
+const PRESET_HEX = "#4c3a59"; // dark purple default
 
 export function initPanel(sand) {
   const panel = document.getElementById("panel");

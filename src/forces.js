@@ -10,7 +10,12 @@ import { CFG } from "./config.js";
 
 // Draw: fingertip or mouse pushes particles radially outward within DRAW_RADIUS.
 // Expects position in canvas-internal coordinate space.
-export function applyDraw(sand, fx, fy) {
+//
+// When `gravityOn` is true, the vertical component is clamped so the finger
+// can only nudge sand sideways or downward — never launch it upward. That
+// matches the mental model of "digging into a pile": grains collapse away
+// from your finger, they don't shoot up out of the pile.
+export function applyDraw(sand, fx, fy, gravityOn = false) {
   const { N, px, py, vx, vy, state, pileHeight, w, dpr } = sand;
   const R = CFG.DRAW_RADIUS * dpr;
   const R2 = R * R;
@@ -24,8 +29,9 @@ export function applyDraw(sand, fx, fy) {
 
     const d = Math.sqrt(d2) || 0.0001;
     const push = ((R - d) / R) * strength * 6;
+    const pushY = (dy / d) * push;
     vx[i] += (dx / d) * push;
-    vy[i] += (dy / d) * push;
+    vy[i] += gravityOn ? Math.max(0, pushY) : pushY;
 
     if (state[i] === 1) {
       const x = px[i] | 0;
