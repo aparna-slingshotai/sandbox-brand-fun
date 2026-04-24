@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Sand Camera</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="sand"></canvas>
+
+    <div id="hint">Move your finger (or mouse) over the sand to draw</div>
+
+    <div id="controls">
+      <button id="btn-wind" class="mode-btn" type="button">
+        <span class="icon">⇋</span><span class="label">Wind</span>
+      </button>
+      <button id="btn-clear" class="mode-btn" type="button">
+        <span class="icon">◎</span><span class="label">Clear</span>
+      </button>
+      <button id="btn-gravity" class="mode-btn" type="button">
+        <span class="icon">↓</span><span class="label">Gravity</span>
+      </button>
+      <button id="btn-reset" class="mode-btn" type="button">
+        <span class="icon">↻</span><span class="label">Reset</span>
+      </button>
+    </div>
+
+    <aside id="panel" class="collapsed" aria-label="Sand controls">
+      <button id="panel-toggle" class="panel-toggle" type="button" aria-expanded="false" aria-controls="panel-body">
+        <span class="panel-chevron" aria-hidden="true"></span>
+        <span class="panel-title">Sand controls</span>
+      </button>
+      <div id="panel-body" class="panel-body" role="group">
+        <label class="row">
+          <span class="row-label">Particle count <em data-val="particle-count"></em></span>
+          <input type="range" id="ctl-count" min="2000" max="120000" step="1000" />
+        </label>
+        <label class="row">
+          <span class="row-label">Particle size <em data-val="particle-size"></em></span>
+          <input type="range" id="ctl-size" min="1" max="3" step="1" />
+        </label>
+        <label class="row">
+          <span class="row-label">Touch sensitivity <em data-val="touch"></em></span>
+          <input type="range" id="ctl-touch" min="10" max="120" step="1" />
+        </label>
+        <label class="row">
+          <span class="row-label">Wind sensitivity <em data-val="wind"></em></span>
+          <input type="range" id="ctl-wind" min="0.05" max="1.6" step="0.05" />
+        </label>
+        <label class="row">
+          <span class="row-label">Gravity amount <em data-val="gravity"></em></span>
+          <input type="range" id="ctl-gravity" min="0.05" max="0.9" step="0.01" />
+        </label>
+        <label class="row">
+          <span class="row-label">Vignette radius <em data-val="vignette"></em></span>
+          <input type="range" id="ctl-vignette" min="0.2" max="0.75" step="0.01" />
+        </label>
+        <label class="row row-color">
+          <span class="row-label">Particle color</span>
+          <input type="color" id="ctl-color" />
+        </label>
+      </div>
+    </aside>
+
+    <div id="permission-overlay" hidden>
+      <div class="panel">
+        <h1>Sand Camera</h1>
+        <p id="permission-msg">Camera access is needed to see you behind the sand.</p>
+        <button id="permission-btn" type="button">Allow camera</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
